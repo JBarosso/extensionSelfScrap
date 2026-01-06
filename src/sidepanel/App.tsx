@@ -341,14 +341,14 @@ function App() {
 
         if (format === 'csv') {
             const maxRows = Math.max(...columns.map(col => col.data.length));
-            const headers = columns.map(col => `"${col.name.replace(/"/g, '""')}"`).join(',');
-            let csvContent = headers + '\n';
+            const headers = columns.map(col => `"${col.name.replace(/"/g, '""')}"`).join(';');
+            let csvContent = 'sep=;\n' + headers + '\n';
 
             for (let i = 0; i < maxRows; i++) {
                 const row = columns.map(col => {
                     const value = sanitize(col.data[i] || '');
                     return `"${value.replace(/"/g, '""')}"`;
-                }).join(',');
+                }).join(';');
                 csvContent += row + '\n';
             }
 
@@ -512,9 +512,12 @@ function App() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => isPickerActive ? stopPicker() : setShowNameModal(true)}
+                        disabled={isConnected === false}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all shadow-sm ${isPickerActive
                             ? 'bg-red-500 hover:bg-red-600 text-white'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : isConnected === false
+                                ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-600'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white'
                             }`}
                     >
                         {isPickerActive ? (
@@ -528,11 +531,14 @@ function App() {
                             <span className={`text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Pagination</span>
                             <button
                                 onClick={() => paginationSelector ? setPaginationSelector(null) : startPaginationPicker()}
+                                disabled={isConnected === false}
                                 className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all border ${paginationSelector
                                     ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                    : darkMode ? 'bg-slate-700 text-slate-400 border-slate-600 hover:border-slate-500' : 'bg-slate-100 text-slate-600 border-slate-200 hover:border-slate-300'
+                                    : isConnected === false
+                                        ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600 dark:border-slate-700'
+                                        : darkMode ? 'bg-slate-700 text-slate-400 border-slate-600 hover:border-slate-500' : 'bg-slate-100 text-slate-600 border-slate-200 hover:border-slate-300'
                                     }`}
-                                title={paginationSelector ? "Pagination active. Click to clear." : "Select Next Page button"}
+                                title={isConnected === false ? "Reconnect to use pagination" : (paginationSelector ? "Pagination active. Click to clear." : "Select Next Page button")}
                             >
                                 {paginationSelector ? <Check size={12} /> : <Plus size={12} />}
                                 {paginationSelector ? 'SET' : 'SELECT'}
@@ -554,6 +560,35 @@ function App() {
                     </div>
                 </div>
             </header>
+
+            {isConnected === false && (
+                <div className={`p-3 border-b animate-in slide-in-from-top duration-300 ${darkMode ? 'bg-rose-500/10 border-rose-500/20' : 'bg-rose-50 border-rose-100'}`}>
+                    <div className="flex items-center justify-between gap-4 max-w-xl mx-auto">
+                        <div className="flex items-center gap-2">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-500 text-white'}`}>
+                                <RotateCcw size={16} className="animate-spin-slow" />
+                            </div>
+                            <div>
+                                <p className={`text-xs font-bold ${darkMode ? 'text-rose-400' : 'text-rose-700'}`}>HORS LIGNE</p>
+                                <p className={`text-[10px] ${darkMode ? 'text-rose-500/70' : 'text-rose-600'}`}>Impossible de communiquer avec la page.</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => {
+                                chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+                                    if (tab?.id) chrome.tabs.reload(tab.id);
+                                });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${darkMode
+                                ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
+                                : 'bg-rose-600 text-white hover:bg-rose-700 shadow-sm'
+                                }`}
+                        >
+                            Rafraîchir la page
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <main className="flex-1 p-4 space-y-3 overflow-auto">
                 {columns.length === 0 && !showSelectorEditor ? (
@@ -740,43 +775,53 @@ function App() {
             </main>
 
             {columns.length > 0 && (
-                <footer className={`p-4 border-t space-y-3 ${darkMode ? 'bg-slate-800 border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.2)]' : 'bg-white border-slate-200'}`}>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setExportMode('table')}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${exportMode === 'table'
-                                ? darkMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-inner' : 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                                : darkMode ? 'bg-slate-700 text-slate-400 border-transparent hover:bg-slate-600' : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'
-                                }`}
-                        >
-                            <Table size={14} />
-                            TABLE MODE
-                        </button>
-                        <button
-                            onClick={() => setExportMode('columns')}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${exportMode === 'columns'
-                                ? darkMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-inner' : 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                                : darkMode ? 'bg-slate-700 text-slate-400 border-transparent hover:bg-slate-600' : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'
-                                }`}
-                        >
-                            <Columns3 size={14} />
-                            COLUMNS MODE
-                        </button>
+                <footer className={`p-4 border-t space-y-4 ${darkMode ? 'bg-slate-800 border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.2)]' : 'bg-white border-slate-200'}`}>
+                    {/* JSON Configuration Section */}
+                    <div className={`p-3 rounded-2xl border transition-all ${darkMode ? 'bg-slate-900/40 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                        <div className="flex items-center gap-2 mb-3 px-1">
+                            <div className="w-1 h-3 bg-blue-500 rounded-full" />
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                Configuration JSON <span className="opacity-50 font-normal normal-case ml-1">(Export JSON uniquement)</span>
+                            </span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setExportMode('table')}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${exportMode === 'table'
+                                    ? darkMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-inner' : 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+                                    : darkMode ? 'bg-slate-700/50 text-slate-500 border-transparent hover:bg-slate-700' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                            >
+                                <Table size={14} />
+                                TABLE MODE
+                            </button>
+                            <button
+                                onClick={() => setExportMode('columns')}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${exportMode === 'columns'
+                                    ? darkMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-inner' : 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+                                    : darkMode ? 'bg-slate-700/50 text-slate-500 border-transparent hover:bg-slate-700' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                            >
+                                <Columns3 size={14} />
+                                COLUMNS MODE
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* Export Buttons */}
+                    <div className="grid grid-cols-2 gap-3">
                         <button
                             onClick={() => exportData('json')}
-                            className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all active:scale-95 font-bold shadow-lg shadow-blue-600/20"
+                            className="group relative overflow-hidden flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all active:scale-95 font-black tracking-wide shadow-lg shadow-blue-600/20"
                         >
-                            <Download size={16} />
+                            <Download size={18} className="group-hover:-translate-y-0.5 transition-transform" />
                             JSON
                         </button>
                         <button
                             onClick={() => exportData('csv')}
-                            className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all active:scale-95 font-bold shadow-lg shadow-emerald-600/20"
+                            className="group relative overflow-hidden flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all active:scale-95 font-black tracking-wide shadow-lg shadow-emerald-600/20"
                         >
-                            <Download size={16} />
+                            <Download size={18} className="group-hover:-translate-y-0.5 transition-transform" />
                             CSV
                         </button>
                     </div>
@@ -784,7 +829,10 @@ function App() {
                     {paginationSelector && (
                         <button
                             onClick={goToNextPage}
-                            className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold transition-all border animate-in slide-in-from-bottom-2 ${darkMode ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                            disabled={isConnected === false}
+                            className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold transition-all border animate-in slide-in-from-bottom-2 ${isConnected === false
+                                ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600 dark:border-slate-700'
+                                : darkMode ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
                                 }`}
                         >
                             Suivant & Scraper <ChevronRight size={16} />
