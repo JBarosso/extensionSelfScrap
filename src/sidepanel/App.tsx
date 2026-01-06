@@ -552,7 +552,8 @@ function App() {
                                     setDevMode(next);
                                     setShowSelectorEditor(next);
                                 }}
-                                className={`w-10 h-5 rounded-full transition-colors relative ${devMode ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                disabled={isConnected === false}
+                                className={`w-10 h-5 rounded-full transition-colors relative ${devMode ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'} ${isConnected === false ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${devMode ? 'left-6' : 'left-1'}`} />
                             </button>
@@ -690,10 +691,10 @@ function App() {
                                         <tr className={darkMode ? 'bg-slate-800' : 'bg-slate-100'}>
                                             <th className="px-4 py-3 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest border-b dark:border-slate-700">#</th>
                                             {columns.map(col => (
-                                                <th key={col.id} className="px-4 py-3 text-left border-b dark:border-slate-700">
-                                                    <div className="flex items-center justify-between gap-2">
+                                                <th key={col.id} className="px-4 py-4 text-left border-b dark:border-slate-700 min-w-[180px] group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                                                    <div className="flex items-center justify-between gap-4">
                                                         {editingColumnId === col.id ? (
-                                                            <div className="flex items-center gap-1">
+                                                            <div className="flex items-center gap-1.5 w-full">
                                                                 <input
                                                                     type="text"
                                                                     value={editingName}
@@ -702,53 +703,57 @@ function App() {
                                                                         if (e.key === 'Enter') saveColumnName();
                                                                         if (e.key === 'Escape') cancelEditing();
                                                                     }}
-                                                                    className="px-1 py-0.5 border border-blue-500 rounded text-xs w-32"
+                                                                    className={`px-2 py-1 border-2 border-blue-500 rounded-lg text-xs w-full outline-none shadow-sm ${darkMode ? 'bg-slate-900' : 'bg-white'}`}
                                                                     autoFocus
                                                                 />
-                                                                <button onClick={saveColumnName} className="p-0.5 hover:bg-green-100 rounded text-green-600">
-                                                                    <Check size={12} />
-                                                                </button>
-                                                                <button onClick={cancelEditing} className="p-0.5 hover:bg-red-100 rounded text-red-600">
-                                                                    <X size={12} />
-                                                                </button>
+                                                                <div className="flex items-center gap-1">
+                                                                    <button onClick={saveColumnName} className="p-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded-lg text-emerald-600 transition-colors">
+                                                                        <Check size={14} />
+                                                                    </button>
+                                                                    <button onClick={cancelEditing} className="p-1.5 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg text-rose-600 transition-colors">
+                                                                        <X size={14} />
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="flex items-center gap-1">
-                                                                <div className="flex items-center gap-2">
+                                                            <>
+                                                                <div className="flex items-center gap-3">
                                                                     <div
-                                                                        className="w-2 h-2 rounded-full shadow-sm"
+                                                                        className="w-2.5 h-2.5 rounded-full shadow-inner ring-2 ring-white dark:ring-slate-800"
                                                                         style={{ backgroundColor: col.color }}
-                                                                        title={`Color: ${col.color}`}
                                                                     />
                                                                     <div className="flex flex-col">
-                                                                        <div className="font-semibold">{col.name}</div>
-                                                                        <div className="text-[10px] text-slate-500 font-normal">{col.dataType}</div>
+                                                                        <div className={`font-bold text-[13px] tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{col.name}</div>
+                                                                        <div className={`text-[10px] font-bold uppercase tracking-widest ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>{col.dataType}</div>
                                                                     </div>
                                                                 </div>
-                                                                <div className="flex items-center gap-1">
+
+                                                                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all duration-200">
                                                                     <button
                                                                         onClick={() => toggleHighlight(col.id)}
-                                                                        className={`p-1 rounded transition-colors ${col.isHighlighted ? 'bg-blue-100 text-blue-600' : 'hover:bg-slate-100 text-slate-400'}`}
+                                                                        className={`p-1.5 rounded-lg transition-all ${col.isHighlighted
+                                                                            ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                                                                            : 'hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-400'}`}
                                                                         title={col.isHighlighted ? "Hide highlight" : "Show highlight"}
                                                                     >
                                                                         {col.isHighlighted ? <Eye size={14} /> : <EyeOff size={14} />}
                                                                     </button>
                                                                     <button
                                                                         onClick={() => startEditingColumn(col)}
-                                                                        className="p-1 hover:bg-blue-50 rounded text-blue-600"
+                                                                        className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-500/20 rounded-lg text-blue-600 dark:text-blue-400 transition-all"
                                                                         title="Edit column name"
                                                                     >
-                                                                        <Edit2 size={12} />
+                                                                        <Edit2 size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => deleteColumn(col.id)}
-                                                                        className="p-1 hover:bg-red-50 rounded text-red-600"
+                                                                        className="p-1.5 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg text-rose-600 dark:text-rose-400 transition-all"
                                                                         title="Delete column"
                                                                     >
-                                                                        <Trash2 size={12} />
+                                                                        <Trash2 size={14} />
                                                                     </button>
                                                                 </div>
-                                                            </div>
+                                                            </>
                                                         )}
                                                     </div>
                                                 </th>
