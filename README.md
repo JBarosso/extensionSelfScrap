@@ -1,4 +1,4 @@
-# Chrome Extension Scraper
+# Chrome Extension Self Scraper
 
 Extension Chrome avec Sidepanel pour extraire des données structurées depuis n'importe quelle page web.
 
