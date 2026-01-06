@@ -475,7 +475,7 @@ function App() {
     const maxRows = columns.length > 0 ? Math.max(...columns.map(col => col.data.length)) : 0;
 
     return (
-        <div className={`w-full min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+        <div className={`w-full h-[100svh] grid grid-rows-[auto_1fr_auto] transition-colors duration-300 overflow-hidden ${darkMode ? 'dark bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
             <header className={`p-4 border-b sticky top-0 z-10 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                 <div className="flex items-center justify-between mb-3">
                     <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">
@@ -516,7 +516,7 @@ function App() {
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all shadow-sm ${isPickerActive
                             ? 'bg-red-500 hover:bg-red-600 text-white'
                             : isConnected === false
-                                ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-600'
+                                ? darkMode ? 'bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-200'
                                 : 'bg-blue-600 hover:bg-blue-700 text-white'
                             }`}
                     >
@@ -535,7 +535,7 @@ function App() {
                                 className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all border ${paginationSelector
                                     ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                                     : isConnected === false
-                                        ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600 dark:border-slate-700'
+                                        ? darkMode ? 'bg-slate-800 text-slate-600 border-slate-700 cursor-not-allowed' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
                                         : darkMode ? 'bg-slate-700 text-slate-400 border-slate-600 hover:border-slate-500' : 'bg-slate-100 text-slate-600 border-slate-200 hover:border-slate-300'
                                     }`}
                                 title={isConnected === false ? "Reconnect to use pagination" : (paginationSelector ? "Pagination active. Click to clear." : "Select Next Page button")}
@@ -553,7 +553,7 @@ function App() {
                                     setShowSelectorEditor(next);
                                 }}
                                 disabled={isConnected === false}
-                                className={`w-10 h-5 rounded-full transition-colors relative ${devMode ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'} ${isConnected === false ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`w-10 h-5 rounded-full transition-colors relative ${devMode ? 'bg-blue-600' : darkMode ? 'bg-slate-600' : 'bg-slate-300'} ${isConnected === false ? 'opacity-40 cursor-not-allowed' : ''}`}
                             >
                                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${devMode ? 'left-6' : 'left-1'}`} />
                             </button>
@@ -591,7 +591,7 @@ function App() {
                 </div>
             )}
 
-            <main className="flex-1 p-4 space-y-3 overflow-auto">
+            <main className="p-4 overflow-hidden">
                 {columns.length === 0 && !showSelectorEditor ? (
                     <div className="text-center py-12 text-slate-400">
                         <MousePointer2 size={48} className="mx-auto mb-3 opacity-50" />
@@ -601,7 +601,7 @@ function App() {
                         )}
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 h-full">
                         {/* Dev Mode Selector Editor */}
                         {showSelectorEditor && (
                             <div className={`mb-6 p-5 border rounded-2xl animate-in slide-in-from-top-4 duration-300 ${darkMode ? 'bg-blue-500/5 border-blue-500/20 shadow-lg shadow-black/20' : 'bg-blue-50 border-blue-100 shadow-sm'}`}>
@@ -672,7 +672,7 @@ function App() {
                         )}
 
                         {/* Columns Grid */}
-                        <div className={`rounded-xl shadow-lg border overflow-hidden transition-all ${darkMode ? 'bg-slate-800 border-slate-700 shadow-black/20' : 'bg-white border-slate-200'}`}>
+                        <div className={`rounded-xl shadow-lg border overflow-hidden flex flex-col h-full grid grid-rows-[auto_1fr] transition-all ${darkMode ? 'bg-slate-800 border-slate-700 shadow-black/20' : 'bg-white border-slate-200'}`}>
                             <div className={`p-4 border-b flex items-center justify-between ${darkMode ? 'bg-slate-800/50 border-slate-700 text-slate-100' : 'bg-slate-50 border-slate-200'}`}>
                                 <h3 className="font-bold text-sm tracking-tight flex items-center gap-2">
                                     <div className="w-1.5 h-4 bg-blue-500 rounded-full" />
@@ -685,9 +685,9 @@ function App() {
                                     <RotateCcw size={14} /> Clear All
                                 </button>
                             </div>
-                            <div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
+                            <div className="overflow-x-auto h-full flex-1 overflow-y-auto custom-scrollbar">
                                 <table className="w-full text-[13px] border-collapse">
-                                    <thead>
+                                    <thead className="sticky top-0 z-10">
                                         <tr className={darkMode ? 'bg-slate-800' : 'bg-slate-100'}>
                                             <th className="px-4 py-3 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest border-b dark:border-slate-700">#</th>
                                             {columns.map(col => (
@@ -957,7 +957,7 @@ function App() {
                                     <p className={`text-sm leading-relaxed mb-4 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                                         Cliquer sur <strong className="text-blue-500">New Column</strong>, donnez un nom, puis survolez la page. Le rectangle bleu indique ce qui sera capturé.
                                     </p>
-                                    <div className={`p-4 rounded-xl border-2 flex items-start gap-3 bg-white dark:bg-slate-900 ${darkMode ? 'border-amber-500/30' : 'border-amber-200'
+                                    <div className={`p-4 rounded-xl border-2 flex items-start gap-3 ${darkMode ? 'bg-slate-900 border-amber-500/30' : 'bg-white border-amber-200'
                                         }`}>
                                         <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center flex-shrink-0">
                                             <MousePointer2 size={16} />
